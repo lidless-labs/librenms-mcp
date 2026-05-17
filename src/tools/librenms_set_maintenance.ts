@@ -3,6 +3,9 @@ import type { ClientFactory } from "./_util.ts";
 import { jsonToolResult } from "./_util.ts";
 import { assertConfirmedWrite } from "../gates.ts";
 
+const DURATION_RE = /^\d+:\d{2}$/;
+const START_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+
 const Schema = Type.Object(
   {
     hostname: Type.String({
@@ -10,14 +13,17 @@ const Schema = Type.Object(
     }),
     duration: Type.String({
       description:
-        "Maintenance duration, e.g. '2h', '30m'. Format: '<N>h' or '<N>m'.",
+        "Maintenance duration. LibreNMS format `H:i`, e.g. `2:00` for 2 hours or `0:30` for 30 minutes.",
     }),
     title: Type.Optional(
       Type.String({ description: "Maintenance window title." }),
     ),
     notes: Type.Optional(Type.String({ description: "Free-text notes." })),
     start: Type.Optional(
-      Type.String({ description: "ISO start time. Default: now." }),
+      Type.String({
+        description:
+          "Start time. LibreNMS format `Y-m-d H:i:00`, e.g. `2026-05-17 14:30:00`. Default: server now.",
+      }),
     ),
     confirm: Type.Boolean({
       description: "Must be true to write. Tier-2 safe-write gate.",
@@ -44,6 +50,16 @@ export function createLibrenmsSetMaintenanceTool(getClient: ClientFactory) {
         notes?: string;
         start?: string;
       };
+      if (!DURATION_RE.test(args.duration)) {
+        throw new Error(
+          `duration must be H:i format (e.g. "2:00" or "0:30"), got: ${args.duration}`,
+        );
+      }
+      if (args.start && !START_RE.test(args.start)) {
+        throw new Error(
+          `start must be Y-m-d H:i:00 format (e.g. "2026-05-17 14:30:00"), got: ${args.start}`,
+        );
+      }
       const client = getClient();
       const body: Record<string, unknown> = { duration: args.duration };
       if (args.title) body.title = args.title;

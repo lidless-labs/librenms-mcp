@@ -26,11 +26,11 @@ describe("librenms_set_maintenance", () => {
     fake = await startFakeLibreNms([]);
     const tool = makeTool();
     await expect(
-      tool.execute("test", { hostname: "sw1.lan", duration: "2h" }),
+      tool.execute("test", { hostname: "sw1.lan", duration: "2:00" }),
     ).rejects.toThrow(WriteGateError);
   });
 
-  it("POSTs to /devices/{hostname}/maintenance with duration + optional fields", async () => {
+  it("POSTs to /devices/{hostname}/maintenance with H:i duration + optional fields", async () => {
     fake = await startFakeLibreNms([
       {
         method: "POST",
@@ -42,7 +42,7 @@ describe("librenms_set_maintenance", () => {
     const tool = makeTool();
     const r = await tool.execute("test", {
       hostname: "sw1.lan",
-      duration: "2h",
+      duration: "2:00",
       title: "firmware upgrade",
       notes: "rolling reboot",
       confirm: true,
@@ -52,8 +52,35 @@ describe("librenms_set_maintenance", () => {
     const postReq = fake.requests.find((q) => q.method === "POST");
     expect(postReq?.path).toBe("/api/v0/devices/sw1.lan/maintenance");
     const body = JSON.parse(postReq!.body);
-    expect(body.duration).toBe("2h");
+    expect(body.duration).toBe("2:00");
     expect(body.title).toBe("firmware upgrade");
     expect(body.notes).toBe("rolling reboot");
+  });
+
+  it("rejects duration in legacy '2h' format before the HTTP call", async () => {
+    fake = await startFakeLibreNms([]);
+    const tool = makeTool();
+    await expect(
+      tool.execute("test", {
+        hostname: "sw1.lan",
+        duration: "2h",
+        confirm: true,
+      }),
+    ).rejects.toThrow(/H:i format/);
+    expect(fake.requests.length).toBe(0);
+  });
+
+  it("rejects ISO-8601 start before the HTTP call", async () => {
+    fake = await startFakeLibreNms([]);
+    const tool = makeTool();
+    await expect(
+      tool.execute("test", {
+        hostname: "sw1.lan",
+        duration: "2:00",
+        start: "2026-05-17T14:30:00Z",
+        confirm: true,
+      }),
+    ).rejects.toThrow(/Y-m-d H:i:00 format/);
+    expect(fake.requests.length).toBe(0);
   });
 });
