@@ -10,7 +10,7 @@ afterEach(async () => {
 });
 
 describe("integration", () => {
-  it("all 10 tools register with unique names matching ^librenms_", () => {
+  it("all 14 tools register with unique names matching ^librenms_", () => {
     const dummy = () =>
       new LibreNmsClient({ url: "http://x", token: "t", tlsInsecure: false });
     const created = [
@@ -24,10 +24,14 @@ describe("integration", () => {
       toolFactories.createLibrenmsAlertHistoryTool(dummy),
       toolFactories.createLibrenmsAckAlertTool(dummy),
       toolFactories.createLibrenmsSetMaintenanceTool(dummy),
+      toolFactories.createLibrenmsGetPortTool(dummy),
+      toolFactories.createLibrenmsEventLogTool(dummy),
+      toolFactories.createLibrenmsUnmuteAlertTool(dummy),
+      toolFactories.createLibrenmsRemoveMaintenanceTool(dummy),
     ];
-    expect(created).toHaveLength(10);
+    expect(created).toHaveLength(14);
     const names = created.map((t) => t.name);
-    expect(new Set(names).size).toBe(10);
+    expect(new Set(names).size).toBe(14);
     for (const n of names) expect(n).toMatch(/^librenms_/);
   });
 

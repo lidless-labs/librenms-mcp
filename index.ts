@@ -57,5 +57,9 @@ export default definePluginEntry({
     register(tools.createLibrenmsAlertHistoryTool(getClient));
     register(tools.createLibrenmsAckAlertTool(getClient));
     register(tools.createLibrenmsSetMaintenanceTool(getClient));
+    register(tools.createLibrenmsGetPortTool(getClient));
+    register(tools.createLibrenmsEventLogTool(getClient));
+    register(tools.createLibrenmsUnmuteAlertTool(getClient));
+    register(tools.createLibrenmsRemoveMaintenanceTool(getClient));
   },
 });

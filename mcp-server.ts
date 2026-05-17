@@ -22,11 +22,15 @@ const tools = [
   toolFactories.createLibrenmsAlertHistoryTool(getClient),
   toolFactories.createLibrenmsAckAlertTool(getClient),
   toolFactories.createLibrenmsSetMaintenanceTool(getClient),
+  toolFactories.createLibrenmsGetPortTool(getClient),
+  toolFactories.createLibrenmsEventLogTool(getClient),
+  toolFactories.createLibrenmsUnmuteAlertTool(getClient),
+  toolFactories.createLibrenmsRemoveMaintenanceTool(getClient),
 ];
 
 const toolMap = new Map(tools.map((t) => [t.name, t]));
 
-const server = new Server({ name: "librenms-mcp", version: "0.1.0" }, { capabilities: { tools: {} } });
+const server = new Server({ name: "librenms-mcp", version: "0.2.0" }, { capabilities: { tools: {} } });
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.parameters })),
