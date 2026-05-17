@@ -50,6 +50,10 @@ export class LibreNmsClient {
     return this.request<T>("PUT", path, body);
   }
 
+  async delete<T = unknown>(path: string): Promise<T> {
+    return this.request<T>("DELETE", path);
+  }
+
   private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const url = this.cfg.url + "/api/v0" + path;
     const headers: Record<string, string> = { "x-auth-token": this.cfg.token };

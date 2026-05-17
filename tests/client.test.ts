@@ -46,6 +46,15 @@ describe("LibreNmsClient", () => {
     }
   });
 
+  it("DELETE method uses correct HTTP verb", async () => {
+    fake = await startFakeLibreNms([
+      { method: "DELETE", path: "/api/v0/devices/host/maintenance", status: 200, body: { status: "ok" } },
+    ]);
+    const c = new LibreNmsClient({ url: fake.baseUrl, token: "t", tlsInsecure: false });
+    await c.delete("/devices/host/maintenance");
+    expect(fake.requests[0].method).toBe("DELETE");
+  });
+
   it("posts JSON body via PUT", async () => {
     fake = await startFakeLibreNms([
       { method: "PUT", path: "/api/v0/alerts/42", status: 200, body: { status: "ok" } },
