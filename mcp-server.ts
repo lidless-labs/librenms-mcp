@@ -25,7 +25,6 @@ const tools = [
   toolFactories.createLibrenmsGetPortTool(getClient),
   toolFactories.createLibrenmsEventLogTool(getClient),
   toolFactories.createLibrenmsUnmuteAlertTool(getClient),
-  toolFactories.createLibrenmsRemoveMaintenanceTool(getClient),
 ];
 
 const toolMap = new Map(tools.map((t) => [t.name, t]));

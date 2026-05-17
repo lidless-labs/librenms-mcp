@@ -11,4 +11,3 @@ export { createLibrenmsSetMaintenanceTool } from "./librenms_set_maintenance.ts"
 export { createLibrenmsGetPortTool } from "./librenms_get_port.ts";
 export { createLibrenmsEventLogTool } from "./librenms_event_log.ts";
 export { createLibrenmsUnmuteAlertTool } from "./librenms_unmute_alert.ts";
-export { createLibrenmsRemoveMaintenanceTool } from "./librenms_remove_maintenance.ts";
