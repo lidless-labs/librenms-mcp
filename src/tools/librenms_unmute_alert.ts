@@ -1,6 +1,6 @@
 import { Type } from "@sinclair/typebox";
 import type { ClientFactory } from "./_util.ts";
-import { jsonToolResult } from "./_util.ts";
+import { jsonToolResult, safeInt } from "./_util.ts";
 import { assertConfirmedWrite } from "../gates.ts";
 
 const Schema = Type.Object(
@@ -31,11 +31,12 @@ export function createLibrenmsUnmuteAlertTool(getClient: ClientFactory) {
     execute: async (_id: string, raw: Record<string, unknown>) => {
       assertConfirmedWrite(raw, NAME);
       const args = raw as { id: number; note?: string };
+      const id = safeInt(args.id, "id");
       const client = getClient();
       const body: Record<string, unknown> = {};
       if (args.note !== undefined) body.note = args.note;
-      const r = await client.put(`/alerts/unmute/${args.id}`, body);
-      return jsonToolResult({ alert_id: args.id, unmuted: true, response: r });
+      const r = await client.put(`/alerts/unmute/${encodeURIComponent(id)}`, body);
+      return jsonToolResult({ alert_id: id, unmuted: true, response: r });
     },
   };
 }

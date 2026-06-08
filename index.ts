@@ -5,9 +5,11 @@
 // The runtime registration is duck-typed and works fine; we cast through
 // `unknown` to bridge the intentional structural mismatch.
 import { definePluginEntry, type AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
+import type { TSchema } from "@sinclair/typebox";
 import { resolveConfig, type LibreNmsConfig } from "./src/config.ts";
 import { LibreNmsClient } from "./src/librenms-client.ts";
 import { registerSecret, redact } from "./src/security.ts";
+import { validateToolArgs } from "./src/validate.ts";
 import * as tools from "./src/tools/index.ts";
 
 interface ToolLike {
@@ -22,6 +24,7 @@ export function withRedactedErrors<T extends ToolLike>(tool: T): T {
     ...tool,
     execute: async (id: string, args: Record<string, unknown>) => {
       try {
+        validateToolArgs(tool.parameters as TSchema, tool.name, args ?? {});
         return await orig(id, args);
       } catch (e) {
         const msg = redact((e as Error).message) as string;

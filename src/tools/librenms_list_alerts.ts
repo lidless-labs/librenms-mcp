@@ -24,7 +24,9 @@ export function createLibrenmsListAlertsTool(getClient: ClientFactory) {
     execute: async (_id: string, raw: Record<string, unknown>) => {
       const args = (raw ?? {}) as { state?: 0 | 1 | 2 };
       const path =
-        args.state !== undefined ? `/alerts?state=${args.state}` : "/alerts";
+        args.state !== undefined
+          ? `/alerts?state=${encodeURIComponent(args.state)}`
+          : "/alerts";
       const client = getClient();
       const r = await client.get<{
         status: string;

@@ -31,7 +31,9 @@ export function createLibrenmsListDevicesTool(getClient: ClientFactory) {
       const args = (raw ?? {}) as {
         type?: "all" | "up" | "down" | "ignored" | "disabled";
       };
-      const path = args.type ? `/devices?type=${args.type}` : "/devices";
+      const path = args.type
+        ? `/devices?type=${encodeURIComponent(args.type)}`
+        : "/devices";
       const client = getClient();
       const r = await client.get<{
         status: string;

@@ -4,6 +4,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import { resolveConfig, type LibreNmsConfig } from "./src/config.ts";
 import { LibreNmsClient } from "./src/librenms-client.ts";
 import { registerSecret, redact } from "./src/security.ts";
+import { validateToolArgs } from "./src/validate.ts";
 import * as toolFactories from "./src/tools/index.ts";
 
 const cfg: LibreNmsConfig = resolveConfig(process.env);
@@ -41,7 +42,9 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
     return { content: [{ type: "text", text: JSON.stringify({ error: `unknown tool: ${req.params.name}` }) }], isError: true };
   }
   try {
-    return await t.execute(req.params.name, (req.params.arguments ?? {}) as Record<string, unknown>);
+    const args = (req.params.arguments ?? {}) as Record<string, unknown>;
+    validateToolArgs(t.parameters, t.name, args);
+    return await t.execute(req.params.name, args);
   } catch (e) {
     const msg = redact((e as Error).message) as string;
     return { content: [{ type: "text", text: JSON.stringify({ error: msg }) }], isError: true };

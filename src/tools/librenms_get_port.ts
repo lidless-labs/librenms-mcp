@@ -1,6 +1,6 @@
 import { Type } from "@sinclair/typebox";
 import type { ClientFactory } from "./_util.ts";
-import { jsonToolResult } from "./_util.ts";
+import { jsonToolResult, safeInt } from "./_util.ts";
 
 const Schema = Type.Object(
   {
@@ -22,11 +22,12 @@ export function createLibrenmsGetPortTool(getClient: ClientFactory) {
     parameters: Schema,
     execute: async (_id: string, raw: Record<string, unknown>) => {
       const args = raw as { port_id: number };
+      const portId = safeInt(args.port_id, "port_id");
       const client = getClient();
       const r = await client.get<{
         status: string;
         port: Array<Record<string, unknown>>;
-      }>(`/ports/${args.port_id}`);
+      }>(`/ports/${encodeURIComponent(portId)}`);
       return jsonToolResult({ port: r.port?.[0] ?? null });
     },
   };

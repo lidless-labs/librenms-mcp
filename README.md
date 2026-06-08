@@ -124,6 +124,8 @@ This MCP uses the same three-tier write-gating pattern as the rest of the `solom
 - **Tier 2 (safe writes):** require an explicit `confirm: true` arg. The JSON schema documents this on every write tool. Alert acknowledge/unmute and entering device maintenance live here. A hallucinated tool call without the confirm flag throws `WriteGateError` before any HTTP traffic.
 - **Tier 3 (destructive):** not implemented in v1. When added, ops like device deletion, alert rule removal, and bulk port resets will additionally require `destructive: true`. The model cannot bypass either gate from a hallucinated call.
 
+**Input validation:** every tool call is validated against its published TypeBox `inputSchema` before the tool runs. Ids, port ids, device ids, limits, and the `type`/`state` filters are bounds- and enum-checked, so a malformed or injection-style argument (e.g. a non-integer id, an off-enum filter, or an unexpected extra field) is rejected up front and never reaches a LibreNMS URL path or query string. Interpolated path/query values are additionally URL-encoded as defense-in-depth.
+
 **API token scope recommendation:** start with a "Read Only" token role in LibreNMS (Settings > API > New API Token > Read Only) and verify the read tools work end-to-end. Grade up to "Normal User" or "Global Read/Write" only after you've confirmed the redactor is masking your token in your transcripts and that the model is honoring the confirm gate. Tokens can be revoked instantly from the same Settings > API screen.
 
 The `LIBRENMS_TLS_INSECURE=true` toggle exists for homelab self-signed certs. Leave it `false` in any environment with a real CA-signed cert.

@@ -1,6 +1,6 @@
 import { Type } from "@sinclair/typebox";
 import type { ClientFactory } from "./_util.ts";
-import { jsonToolResult } from "./_util.ts";
+import { jsonToolResult, safeInt } from "./_util.ts";
 
 const Schema = Type.Object(
   {
@@ -17,11 +17,12 @@ export function createLibrenmsGetAlertTool(getClient: ClientFactory) {
     parameters: Schema,
     execute: async (_id: string, raw: Record<string, unknown>) => {
       const args = raw as { id: number };
+      const id = safeInt(args.id, "id");
       const client = getClient();
       const r = await client.get<{
         status: string;
         alerts: Array<Record<string, unknown>>;
-      }>(`/alerts/${args.id}`);
+      }>(`/alerts/${encodeURIComponent(id)}`);
       return jsonToolResult({ alert: r.alerts?.[0] ?? null });
     },
   };
