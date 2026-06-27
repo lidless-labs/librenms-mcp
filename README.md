@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/librenms-mcp-banner.jpg" alt="librenms-mcp banner" width="900">
+</p>
+
 <h1 align="center">librenms-mcp</h1>
 
 <p align="center">
@@ -5,15 +9,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/@solomonneas/librenms-mcp?style=for-the-badge&label=npm" alt="npm version">
-  <img src="https://img.shields.io/badge/status-WIP-orange?style=for-the-badge" alt="Status: work in progress">
-  <img src="https://img.shields.io/badge/MCP-server-5a45ff?style=for-the-badge" alt="Model Context Protocol server">
-  <img src="https://img.shields.io/badge/node-%3E%3D20-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node 20+">
-  <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT license">
+  <a href="https://lidless.dev/librenms-mcp"><strong>Website &rarr; lidless.dev/librenms-mcp</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://lidless.dev/librenms-mcp"><strong>Website &rarr; lidless.dev/librenms-mcp</strong></a>
+  <img src="https://img.shields.io/npm/v/@solomonneas/librenms-mcp?style=for-the-badge&logo=npm&label=npm" alt="npm version">
+  <img src="https://img.shields.io/badge/MCP-server-8A2BE2?style=for-the-badge" alt="MCP server">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=for-the-badge" alt="MIT license">
 </p>
 
 librenms-mcp is a [Model Context Protocol](https://modelcontextprotocol.io) server for [LibreNMS](https://www.librenms.org/), the open-source network monitoring system. It lets an AI client read your monitored network surface, devices, ports, alerts, and events, over LibreNMS API-token auth, and acknowledge or mute alerts only when you pass an explicit `confirm: true`. It differs from pointing an agent at the raw LibreNMS REST API in one way that matters: every write is gated, every argument is schema-validated before it leaves the host, and your token is redacted from all output, so a hallucinated tool call cannot change your monitoring state by accident.
@@ -31,6 +33,28 @@ Writes are gated in three tiers:
 - **Tier 3 (destructive)**: not implemented in v1. When added, ops like device deletion and alert-rule removal will additionally require `destructive: true`. The model cannot bypass either gate from a hallucinated call.
 
 Every tool call is validated against its published TypeBox `inputSchema` before the tool runs. Ids, port ids, device ids, limits, and the `type`/`state` filters are bounds- and enum-checked, so a malformed or injection-style argument is rejected up front and never reaches a LibreNMS URL path or query string. Interpolated path and query values are additionally URL-encoded as defense-in-depth. The API token is registered with the redactor on startup and masked from all log and error output.
+
+## Quickstart
+
+Published to npm as [`@solomonneas/librenms-mcp`](https://www.npmjs.com/package/@solomonneas/librenms-mcp). Run it on demand with `npx`, or install the global binary.
+
+```bash
+# run on demand
+npx -y @solomonneas/librenms-mcp
+
+# or install the global `librenms-mcp` binary
+npm install -g @solomonneas/librenms-mcp
+```
+
+It needs Node 20+ and two env vars, `LIBRENMS_URL` and `LIBRENMS_TOKEN`. The server speaks stdio, so a quick way to confirm it starts is to feed it an MCP `tools/list` request:
+
+```bash
+export LIBRENMS_URL=https://librenms.example.local
+export LIBRENMS_TOKEN=<your-api-token>
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | npx -y @solomonneas/librenms-mcp
+```
+
+You should get back a JSON listing of the 13 tools above. In normal use you point an MCP client at the same command instead.
 
 ## Tools
 
@@ -59,27 +83,15 @@ Every tool call is validated against its published TypeBox `inputSchema` before 
 | `librenms_unmute_alert` | Unmute a previously muted alert. |
 | `librenms_set_maintenance` | Put a device into a maintenance window. |
 
-## Quickstart
+## Configuration
 
-Published to npm as [`@solomonneas/librenms-mcp`](https://www.npmjs.com/package/@solomonneas/librenms-mcp). Run it on demand with `npx`, or install the global binary.
+Set the following env vars. Both credential vars are required.
 
-```bash
-# run on demand
-npx -y @solomonneas/librenms-mcp
-
-# or install the global `librenms-mcp` binary
-npm install -g @solomonneas/librenms-mcp
-```
-
-It needs Node 20+ and two env vars, `LIBRENMS_URL` and `LIBRENMS_TOKEN`. The server speaks stdio, so a quick way to confirm it starts is to feed it an MCP `tools/list` request:
-
-```bash
-export LIBRENMS_URL=https://librenms.example.local
-export LIBRENMS_TOKEN=<your-api-token>
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | npx -y @solomonneas/librenms-mcp
-```
-
-You should get back a JSON listing of the 13 tools above. In normal use you point an MCP client at the same command instead.
+| Variable | Required | Default | Notes |
+|---|---|---|---|
+| `LIBRENMS_URL` | yes | - | Base URL of your LibreNMS instance. Trailing slashes are stripped. |
+| `LIBRENMS_TOKEN` | yes | - | LibreNMS API token. Registered with the redactor on startup and masked from all output. |
+| `LIBRENMS_TLS_INSECURE` | no | `false` | Skip TLS cert validation for homelab self-signed certs. Accepts `true`/`1`/`yes`, case-insensitive. |
 
 ## MCP client config
 
@@ -146,16 +158,6 @@ The plugin loads automatically once installed. Config goes in your `~/.openclaw/
 ```
 
 Env vars from `~/.openclaw/workspace/.env` are inherited by the plugin.
-
-## Configuration
-
-Set the following env vars. Both credential vars are required.
-
-| Variable | Required | Default | Notes |
-|---|---|---|---|
-| `LIBRENMS_URL` | yes | - | Base URL of your LibreNMS instance. Trailing slashes are stripped. |
-| `LIBRENMS_TOKEN` | yes | - | LibreNMS API token. Registered with the redactor on startup and masked from all output. |
-| `LIBRENMS_TLS_INSECURE` | no | `false` | Skip TLS cert validation for homelab self-signed certs. Accepts `true`/`1`/`yes`, case-insensitive. |
 
 ## Safety
 
