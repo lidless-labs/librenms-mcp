@@ -7,51 +7,57 @@ import { registerSecret, redact } from "./src/security.ts";
 import { validateToolArgs } from "./src/validate.ts";
 import * as toolFactories from "./src/tools/index.ts";
 
-const cfg: LibreNmsConfig = resolveConfig(process.env);
-registerSecret(cfg.token);
+export function createServer(): Server {
+  const cfg: LibreNmsConfig = resolveConfig(process.env);
+  registerSecret(cfg.token);
 
-const getClient = () => new LibreNmsClient(cfg);
+  const getClient = () => new LibreNmsClient(cfg);
 
-const tools = [
-  toolFactories.createLibrenmsStatusTool(getClient),
-  toolFactories.createLibrenmsListDevicesTool(getClient),
-  toolFactories.createLibrenmsGetDeviceTool(getClient),
-  toolFactories.createLibrenmsListPortsTool(getClient),
-  toolFactories.createLibrenmsPortHealthTool(getClient),
-  toolFactories.createLibrenmsListAlertsTool(getClient),
-  toolFactories.createLibrenmsGetAlertTool(getClient),
-  toolFactories.createLibrenmsAlertHistoryTool(getClient),
-  toolFactories.createLibrenmsAckAlertTool(getClient),
-  toolFactories.createLibrenmsSetMaintenanceTool(getClient),
-  toolFactories.createLibrenmsGetPortTool(getClient),
-  toolFactories.createLibrenmsEventLogTool(getClient),
-  toolFactories.createLibrenmsUnmuteAlertTool(getClient),
-];
+  const tools = [
+    toolFactories.createLibrenmsStatusTool(getClient),
+    toolFactories.createLibrenmsListDevicesTool(getClient),
+    toolFactories.createLibrenmsGetDeviceTool(getClient),
+    toolFactories.createLibrenmsListPortsTool(getClient),
+    toolFactories.createLibrenmsPortHealthTool(getClient),
+    toolFactories.createLibrenmsListAlertsTool(getClient),
+    toolFactories.createLibrenmsGetAlertTool(getClient),
+    toolFactories.createLibrenmsAlertHistoryTool(getClient),
+    toolFactories.createLibrenmsAckAlertTool(getClient),
+    toolFactories.createLibrenmsSetMaintenanceTool(getClient),
+    toolFactories.createLibrenmsGetPortTool(getClient),
+    toolFactories.createLibrenmsEventLogTool(getClient),
+    toolFactories.createLibrenmsUnmuteAlertTool(getClient),
+  ];
 
-const toolMap = new Map(tools.map((t) => [t.name, t]));
+  const toolMap = new Map(tools.map((t) => [t.name, t]));
 
-const server = new Server({ name: "librenms-mcp", version: "0.2.0" }, { capabilities: { tools: {} } });
+  const server = new Server({ name: "librenms-mcp", version: "0.2.0" }, { capabilities: { tools: {} } });
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.parameters })),
-}));
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.parameters })),
+  }));
 
-server.setRequestHandler(CallToolRequestSchema, async (req) => {
-  const t = toolMap.get(req.params.name);
-  if (!t) {
-    return { content: [{ type: "text", text: JSON.stringify({ error: `unknown tool: ${req.params.name}` }) }], isError: true };
-  }
-  try {
-    const args = (req.params.arguments ?? {}) as Record<string, unknown>;
-    validateToolArgs(t.parameters, t.name, args);
-    return await t.execute(req.params.name, args);
-  } catch (e) {
-    const msg = redact((e as Error).message) as string;
-    return { content: [{ type: "text", text: JSON.stringify({ error: msg }) }], isError: true };
-  }
-});
+  server.setRequestHandler(CallToolRequestSchema, async (req) => {
+    const t = toolMap.get(req.params.name);
+    if (!t) {
+      return { content: [{ type: "text", text: JSON.stringify({ error: `unknown tool: ${req.params.name}` }) }], isError: true };
+    }
+    try {
+      const args = (req.params.arguments ?? {}) as Record<string, unknown>;
+      validateToolArgs(t.parameters, t.name, args);
+      return await t.execute(req.params.name, args);
+    } catch (e) {
+      const msg = redact((e as Error).message) as string;
+      return { content: [{ type: "text", text: JSON.stringify({ error: msg }) }], isError: true };
+    }
+  });
 
-const transport = new StdioServerTransport();
+  return server;
+}
+
+export async function serve(): Promise<void> {
+  const server = createServer();
+  const transport = new StdioServerTransport();
   // Strip the draft-07 `$schema` the MCP SDK stamps on tool schemas; Anthropic
   // rejects it ("must match JSON Schema draft 2020-12") when the full tool set
   // is sent, e.g. on subagent spawns. Intercept tools/list output here.
@@ -67,3 +73,4 @@ const transport = new StdioServerTransport();
     return __send(message);
   };
   await server.connect(transport);
+}
