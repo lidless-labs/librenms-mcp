@@ -14,12 +14,15 @@
       "pluginSdkVersion": "2026.5.17"
     }
   },
-  "bin": { "librenms-mcp": "./dist/mcp-server.js" },
+  "bin": {
+    "librenmsctl": "./dist/cli.js",
+    "librenms-mcp": "./dist/mcp-bin.js"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "build": "tsup",
-    "start": "node dist/mcp-server.js",
-    "dev": "tsx mcp-server.ts",
+    "start": "node dist/cli.js mcp",
+    "dev": "tsx mcp-bin.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepublishOnly": "npm run typecheck && npm test && npm run build"
