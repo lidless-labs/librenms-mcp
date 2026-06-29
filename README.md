@@ -95,7 +95,7 @@ Set the following env vars. Both credential vars are required.
 
 ## CLI
 
-The same package ships `librenmsctl`, a read-only operator CLI for shells, cron, and CI. It shares the LibreNMS client core with the MCP server and talks to the same `/api/v0` API over token auth. It exposes only the read tools (tier 1); the confirm-gated writes (`ack`, `set_maintenance`, `unmute`) are intentionally not surfaced in the CLI.
+The same package ships `librenmsctl`, a read-only **control CLI** for shells, cron, and CI. It shares the LibreNMS client core with the MCP server and talks to the same `/api/v0` API over token auth. It exposes only the read tools (tier 1); the confirm-gated writes (`ack`, `set_maintenance`, `unmute`) are intentionally not surfaced in the CLI.
 
 ```bash
 # installed globally as `librenmsctl`, or via `npx @solomonneas/librenms-mcp librenmsctl ...`
