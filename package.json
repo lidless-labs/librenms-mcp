@@ -1,7 +1,15 @@
 {
   "name": "@solomonneas/librenms-mcp",
   "version": "0.2.0",
-  "description": "MCP server exposing LibreNMS read + safe-write tools",
+  "description": "librenmsctl operator CLI for LibreNMS with an MCP-compatible adapter",
+  "keywords": [
+    "librenms",
+    "librenmsctl",
+    "network-monitoring",
+    "observability",
+    "mcp",
+    "model-context-protocol"
+  ],
   "type": "module",
   "openclaw": {
     "extensions": ["./index.ts"],
